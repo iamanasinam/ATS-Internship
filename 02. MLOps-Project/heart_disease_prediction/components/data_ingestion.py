@@ -1,5 +1,6 @@
 import os
 from dotenv import load_dotenv
+import certifi
 
 import pandas as pd
 from pandas import DataFrame
@@ -13,7 +14,9 @@ from heart_disease_prediction.entity.artifact_entity import DataIngestionArtifac
 # from heart_disease_prediction.logger import logging
 
 # Load environment variables from the .env file
-load_dotenv()
+# load_dotenv()
+
+ca = certifi.where()
 
 
 class DataIngestion:
@@ -40,9 +43,18 @@ class DataIngestion:
                 raise ValueError("MONGODB_URL environment variable not set.")
 
             # MongoDB connection details
-            mongo_client = MongoClient(mongo_url)
-            db = mongo_client["heart_disease"]
-            collection = db["stroke_data"]
+            mongo_client = MongoClient(mongo_url, tlsCAFile=ca)
+
+            # Fetch the DB and Collection names from environment variables
+            db_name = os.getenv("DB_NAME")
+            collection_name = os.getenv("COLLECTION_NAME")
+            if not db_name or not collection_name:
+                raise ValueError(
+                    "DB_NAME or COLLECTION_NAME environment variable not set."
+                )
+
+            db = mongo_client[db_name]  # it is heart disease
+            collection = db[collection_name]  # it is data stroke
 
             # Fetch all data from the collection
             data = list(collection.find())
@@ -122,6 +134,7 @@ class DataIngestion:
             data_ingestion_artifact = DataIngestionArtifact(
                 trained_file_path=self.data_ingestion_config.training_file_path,
                 test_file_path=self.data_ingestion_config.testing_file_path,
+                feature_store_path=self.data_ingestion_config.feature_store_file_path,
             )
             # logging.info(f"Data ingestion artifact: {data_ingestion_artifact}")
             return data_ingestion_artifact
