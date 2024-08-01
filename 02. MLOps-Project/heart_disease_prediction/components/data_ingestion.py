@@ -1,20 +1,13 @@
 import os
 from dotenv import load_dotenv
 import certifi
-
 import pandas as pd
 from pandas import DataFrame
 from sklearn.model_selection import train_test_split
 from pymongo import MongoClient
-
 from heart_disease_prediction.entity.config_entity import DataIngestionConfig
 from heart_disease_prediction.entity.artifact_entity import DataIngestionArtifact
-
-# from heart_disease_prediction.exception import heart_disease_prediction_exception
-# from heart_disease_prediction.logger import logging
-
-# Load environment variables from the .env file
-# load_dotenv()
+from heart_disease_prediction.constants import DATABASE_NAME, COLLECTION_NAME
 
 ca = certifi.where()
 
@@ -45,16 +38,8 @@ class DataIngestion:
             # MongoDB connection details
             mongo_client = MongoClient(mongo_url, tlsCAFile=ca)
 
-            # Fetch the DB and Collection names from environment variables
-            db_name = os.getenv("DB_NAME")
-            collection_name = os.getenv("COLLECTION_NAME")
-            if not db_name or not collection_name:
-                raise ValueError(
-                    "DB_NAME or COLLECTION_NAME environment variable not set."
-                )
-
-            db = mongo_client[db_name]  # it is heart disease
-            collection = db[collection_name]  # it is data stroke
+            db = mongo_client[DATABASE_NAME]  # it is heart disease
+            collection = db[COLLECTION_NAME]  # it is data stroke
 
             # Fetch all data from the collection
             data = list(collection.find())

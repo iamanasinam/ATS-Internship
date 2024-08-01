@@ -8,4 +8,8 @@ class DataIngestionArtifact:
     feature_store_path: str
 
 
-
+@dataclass
+class DataValidationArtifact:
+    validation_status: bool
+    message: str
+    report_file_path: str
