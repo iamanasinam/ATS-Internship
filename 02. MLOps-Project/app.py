@@ -1,7 +1,9 @@
 # app.py
 
-from sklearn.metrics import confusion_matrix, accuracy_score
-import numpy as np
+from dotenv import load_dotenv
+import subprocess
+import pandas as pd
+from heart_disease_prediction.components import estimator
 from heart_disease_prediction.entity.config_entity import DataIngestionConfig
 from heart_disease_prediction.entity.artifact_entity import DataIngestionArtifact
 from heart_disease_prediction.components.data_ingestion import DataIngestion
@@ -10,10 +12,7 @@ from heart_disease_prediction.components.model_trainer import (
     read_transformed_data,
     model_evaluation,
 )
-from dotenv import load_dotenv
-import subprocess
-import pandas as pd
-from heart_disease_prediction.components import estimator
+
 
 # Load environment variables from the .env file
 load_dotenv()
@@ -54,5 +53,57 @@ model_path = "./artifact/best_model.pkl"
 preprocessing_path = "./artifact/preprocessing.pkl"
 test_data_path = diArtifacts.test_file_path
 
-# Use the function from estimator.py to load and evaluate the model
-estimator.load_and_evaluate(model_path, preprocessing_path, test_data_path)
+
+# Function to get user input and predict
+def get_user_input_and_predict():
+    print("Please enter the following details:")
+    user_data = {
+        "age": input("Enter age (e.g., 45): "),
+        "hypertension": input("Enter hypertension (0 for No, 1 for Yes): "),
+        "heart_disease": input("Enter heart disease (0 for No, 1 for Yes): "),
+        "avg_glucose_level": input("Enter average glucose level (e.g., 85.96): "),
+        "bmi": input("Enter BMI (e.g., 22.3): "),
+        "gender": input("Enter gender (Male/Female): "),
+        "ever_married": input("Ever married (Yes/No): "),
+        "work_type": input(
+            "Work type (Private/Self-employed/Govt_job/Children/Never_worked): "
+        ),
+        "Residence_type": input("Residence type (Urban/Rural): "),
+        "smoking_status": input(
+            "Smoking status (formerly smoked/never smoked/smokes/Unknown): "
+        ),
+    }
+
+    # Convert to DataFrame
+    user_df = pd.DataFrame([user_data])
+
+    # Convert appropriate columns to numeric
+    numeric_columns = [
+        "age",
+        "hypertension",
+        "heart_disease",
+        "avg_glucose_level",
+        "bmi",
+    ]
+    for column in numeric_columns:
+        user_df[column] = pd.to_numeric(user_df[column])
+
+    # Predict using the estimator
+    prediction = estimator.predict(model_path, preprocessing_path, user_df)
+    print(f"Prediction: {'Stroke' if prediction[0] == 1 else 'No Stroke'}")
+
+
+# Execute prediction
+get_user_input_and_predict()
+
+
+# Enter age (e.g., 45): 50
+# Enter hypertension (0 for No, 1 for Yes): 1
+# Enter heart disease (0 for No, 1 for Yes): 0
+# Enter average glucose level (e.g., 85.96): 105.5
+# Enter BMI (e.g., 22.3): 28.7
+# Enter gender (Male/Female): Male
+# Ever married (Yes/No): Yes
+# Work type (Private/Self-employed/Govt_job/Children/Never_worked): Private
+# Residence type (Urban/Rural): Urban
+# Smoking status (formerly smoked/never smoked/smokes/Unknown): never smoked

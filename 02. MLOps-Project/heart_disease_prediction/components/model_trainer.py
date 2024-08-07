@@ -90,8 +90,35 @@ def save_model(model, model_path):
 
 def save_evaluation_report_as_yaml(report, file_path):
     os.makedirs(os.path.dirname(file_path), exist_ok=True)
+
+    # Reformat the report to match the required structure
+    formatted_report = {
+        "accuracy": report["accuracy"],
+        "best_model": report["best_model"],
+        "classification_report": {
+            "f1-score": report["classification_report"]["macro avg"]["f1-score"],
+            "precision": report["classification_report"]["macro avg"]["precision"],
+            "recall": report["classification_report"]["macro avg"]["recall"],
+            "macro avg": {
+                "f1-score": report["classification_report"]["macro avg"]["f1-score"],
+                "precision": report["classification_report"]["macro avg"]["precision"],
+                "recall": report["classification_report"]["macro avg"]["recall"],
+                "support": report["classification_report"]["macro avg"]["support"],
+            },
+            "weighted avg": {
+                "f1-score": report["classification_report"]["weighted avg"]["f1-score"],
+                "precision": report["classification_report"]["weighted avg"][
+                    "precision"
+                ],
+                "recall": report["classification_report"]["weighted avg"]["recall"],
+                "support": report["classification_report"]["weighted avg"]["support"],
+            },
+        },
+        "confusion_matrix": report["confusion_matrix"],
+    }
+
     with open(file_path, "w") as file:
-        yaml.dump(report, file, default_flow_style=False)
+        yaml.dump(formatted_report, file, default_flow_style=False)
     print(f"Evaluation report saved at {file_path}")
 
 
@@ -162,3 +189,8 @@ def model_evaluation(expected_score):
             print(
                 f"Best model ({best_model_name}) does not meet the expected score. Model discarded."
             )
+
+
+if __name__ == "__main__":
+    expected_score = 0.5  # Set your expected score
+    model_evaluation(expected_score)
