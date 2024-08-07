@@ -1,3 +1,7 @@
+# app.py
+
+from sklearn.metrics import confusion_matrix, accuracy_score
+import numpy as np
 from heart_disease_prediction.entity.config_entity import DataIngestionConfig
 from heart_disease_prediction.entity.artifact_entity import DataIngestionArtifact
 from heart_disease_prediction.components.data_ingestion import DataIngestion
@@ -7,8 +11,9 @@ from heart_disease_prediction.components.model_trainer import (
     model_evaluation,
 )
 from dotenv import load_dotenv
-import os
 import subprocess
+import pandas as pd
+from heart_disease_prediction.components import estimator
 
 # Load environment variables from the .env file
 load_dotenv()
@@ -43,3 +48,11 @@ expected_score = 0.85  # Define the expected accuracy score
 model_evaluation(expected_score)
 
 print("Model evaluation completed.")
+
+# Paths to your files
+model_path = "./artifact/best_model.pkl"
+preprocessing_path = "./artifact/preprocessing.pkl"
+test_data_path = diArtifacts.test_file_path
+
+# Use the function from estimator.py to load and evaluate the model
+estimator.load_and_evaluate(model_path, preprocessing_path, test_data_path)

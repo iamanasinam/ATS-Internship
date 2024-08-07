@@ -1,29 +1,28 @@
 import pandas as pd
 import yaml
 import os
-from sklearn.neighbors import KNeighborsClassifier
-from sklearn.svm import SVC
+import importlib
 from sklearn.metrics import (
     classification_report,
     accuracy_score,
     precision_score,
     recall_score,
     f1_score,
+    confusion_matrix,
 )
 import pickle
 
 
-def read_schema():
-    schema_path = os.path.join(os.path.dirname(__file__), "../../config/schema.yaml")
+def read_yaml(file_path):
     try:
-        with open(schema_path, "r") as file:
-            schema = yaml.safe_load(file)
-        return schema
+        with open(file_path, "r") as file:
+            data = yaml.safe_load(file)
+        return data
     except FileNotFoundError:
-        print(f"Schema file not found at {schema_path}")
+        print(f"File not found at {file_path}")
         return None
     except yaml.YAMLError as e:
-        print(f"Error reading schema file: {e}")
+        print(f"Error reading YAML file: {e}")
         return None
 
 
@@ -54,16 +53,12 @@ def process_data():
 
 def read_transformed_data():
     transformed_train, transformed_test = process_data()
-    schema = read_schema()
     if transformed_train is not None:
         print("Training data:")
         print(transformed_train.shape)
     if transformed_test is not None:
         print("Test data:")
         print(transformed_test.shape)
-    if schema is not None:
-        print("Schema file contents:")
-        print(schema)
 
 
 def train_and_evaluate_model(model, X_train, y_train, X_test, y_test):
@@ -74,6 +69,7 @@ def train_and_evaluate_model(model, X_train, y_train, X_test, y_test):
     recall = recall_score(y_test, predictions, average="weighted")
     f1 = f1_score(y_test, predictions, average="weighted")
     report = classification_report(y_test, predictions, output_dict=True)
+    confusion_mat = confusion_matrix(y_test, predictions)
 
     evaluation_report = {
         "accuracy": accuracy,
@@ -81,6 +77,7 @@ def train_and_evaluate_model(model, X_train, y_train, X_test, y_test):
         "recall": recall,
         "f1_score": f1,
         "classification_report": report,
+        "confusion_matrix": confusion_mat.tolist(),  # Convert to list for YAML serialization
     }
     return evaluation_report, model
 
@@ -100,50 +97,66 @@ def save_evaluation_report_as_yaml(report, file_path):
 
 def model_evaluation(expected_score):
     transformed_train, transformed_test = process_data()
+    model_config_path = os.path.join(
+        os.path.dirname(__file__), "../../config/model.yaml"
+    )
+    model_config = read_yaml(model_config_path)
 
-    if transformed_train is not None and transformed_test is not None:
+    if (
+        transformed_train is not None
+        and transformed_test is not None
+        and model_config is not None
+    ):
         X_train = transformed_train.drop("stroke", axis=1)
         y_train = transformed_train["stroke"]
         X_test = transformed_test.drop("stroke", axis=1)
         y_test = transformed_test["stroke"]
 
-        # Train and evaluate KNN
-        knn_model = KNeighborsClassifier()
-        knn_report, knn_trained_model = train_and_evaluate_model(
-            knn_model, X_train, y_train, X_test, y_test
-        )
+        best_model = None
+        best_model_name = ""
+        best_model_report = None
 
-        # Train and evaluate SVM
-        svm_model = SVC()
-        svm_report, svm_trained_model = train_and_evaluate_model(
-            svm_model, X_train, y_train, X_test, y_test
-        )
+        for module_key, module_value in model_config["model_selection"].items():
+            module_name = module_value["module"]
+            class_name = module_value["class"]
+            params = module_value["params"]
 
-        # Compare models
-        if knn_report["accuracy"] > svm_report["accuracy"]:
-            best_model_report = knn_report
-            best_model = knn_trained_model
-            best_model_name = "KNN"
-        else:
-            best_model_report = svm_report
-            best_model = svm_trained_model
-            best_model_name = "SVM"
+            # Dynamically import the module and class
+            module = importlib.import_module(module_name)
+            model_class = getattr(module, class_name)
+            model = model_class(**params)
 
-        print(f"{best_model_name} Model Evaluation Report:")
-        for key, value in best_model_report.items():
-            print(f"{key}: {value}")
+            report, trained_model = train_and_evaluate_model(
+                model, X_train, y_train, X_test, y_test
+            )
 
-        # Check if the best model meets the expected score
-        if best_model_report["accuracy"] >= expected_score:
+            if best_model is None or report["accuracy"] > best_model_report["accuracy"]:
+                best_model = trained_model
+                best_model_name = class_name
+                best_model_report = report
+
+        if best_model_report and best_model_report["accuracy"] >= expected_score:
             print(
                 f"Best model ({best_model_name}) meets the expected score. Saving model..."
             )
+            best_model_report["best_model"] = (
+                best_model_name  # Add best model name to the report
+            )
+
+            # Create a new report structure that only contains the best model's report
+            final_report = {
+                "best_model": best_model_name,
+                "accuracy": best_model_report["accuracy"],
+                "classification_report": best_model_report["classification_report"],
+                "confusion_matrix": best_model_report["confusion_matrix"],
+            }
+
             model_path = "./artifact/best_model.pkl"
             save_model(best_model, model_path)
 
             # Save evaluation report as YAML
             yaml_report_path = "./artifact/model_evaluation_report.yaml"
-            save_evaluation_report_as_yaml(best_model_report, yaml_report_path)
+            save_evaluation_report_as_yaml(final_report, yaml_report_path)
             print(f"Evaluation report saved at {yaml_report_path}")
         else:
             print(
