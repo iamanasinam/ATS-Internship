@@ -1,34 +1,45 @@
+from heart_disease_prediction.entity.config_entity import DataIngestionConfig
+from heart_disease_prediction.entity.artifact_entity import DataIngestionArtifact
+from heart_disease_prediction.components.data_ingestion import DataIngestion
+from heart_disease_prediction.components.data_transformation import DataTransformation
 from heart_disease_prediction.components.model_trainer import (
-    process_data,
     read_transformed_data,
     model_evaluation,
 )
+from dotenv import load_dotenv
+import os
+import subprocess
 
+# Load environment variables from the .env file
+load_dotenv()
 
-def main():
+# Data Ingestion
+data_ingestion = DataIngestion(DataIngestionConfig)
+diArtifacts = data_ingestion.initiate_data_ingestion()
 
-    read_transformed_data()
-    expected_score = 0.85  # Define the expected accuracy score
-    model_evaluation(expected_score)
+# Extract the test.csv path and schema.yaml path
+test_csv_path = diArtifacts.test_file_path
+schema_path = "./config/schema.yaml"
 
-    # transformed the data
-    # read_transformed_data()
+# Validate the test data
+subprocess.run(
+    [
+        "python",
+        "heart_disease_prediction/components/data_validation.py",
+        test_csv_path,
+        schema_path,
+    ]
+)
 
-    # read_transformed_data()
-    # model_evaluation()
-    # Process the data
-    # transformed_train, transformed_test = process_data()
-    # # process_data()
-    # test = print_data()
-    # print(test)
+# Data Transformation
+data_transformation = DataTransformation(diArtifacts, schema_path)
+transformation_artifacts = data_transformation.initiate_data_transformation()
 
-    # Print the data (or handle it as needed)
-    # print("Transformed Train Data:")
-    # print(transformed_train.shape)
+print("Data transformation completed. Artifacts:", transformation_artifacts)
 
-    # print("\nTransformed Test Data:")
-    # print(transformed_test.shape)
+# Read transformed data and evaluate the model
+read_transformed_data()
+expected_score = 0.85  # Define the expected accuracy score
+model_evaluation(expected_score)
 
-
-if __name__ == "__main__":
-    main()
+print("Model evaluation completed.")
