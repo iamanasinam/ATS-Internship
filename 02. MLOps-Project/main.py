@@ -30,6 +30,33 @@ async def welcome_page(request: Request):
     )
 
 
+# @app.get("/train", response_class=HTMLResponse)
+# async def train_pipeline(request: Request):
+#     # Run the training pipeline
+#     di_artifacts = training_pipeline.run_data_ingestion()
+#     training_pipeline.run_data_validation(di_artifacts.test_file_path)
+#     transformation_artifacts = training_pipeline.run_data_transformation(di_artifacts)
+
+#     # Access file paths from the transformation_artifacts dictionary
+#     # transformed_train_file_path = transformation_artifacts.get(
+#     #     "transformed_train_file_path"
+#     # )
+
+#     transformed_train_file_path = "./artifact/transformed_train/train_transformed.csv"
+
+#     # Check if the path is valid
+#     if not transformed_train_file_path:
+#         return templates.TemplateResponse(
+#             "train.html",
+#             {
+#                 "request": request,
+#                 "title": "Training",
+#                 "training_result": "Training completed, but no transformed data file found.",
+#                 "sample_data": "",
+#             },
+#         )
+
+
 @app.get("/train", response_class=HTMLResponse)
 async def train_pipeline(request: Request):
     # Run the training pipeline
@@ -37,24 +64,33 @@ async def train_pipeline(request: Request):
     training_pipeline.run_data_validation(di_artifacts.test_file_path)
     transformation_artifacts = training_pipeline.run_data_transformation(di_artifacts)
 
-    # Access file paths from the transformation_artifacts dictionary
-    # transformed_train_file_path = transformation_artifacts.get(
-    #     "transformed_train_file_path"
-    # )
-
+    # Manually specify the path to the transformed data file
     transformed_train_file_path = "./artifact/transformed_train/train_transformed.csv"
 
-    # Check if the path is valid
-    if not transformed_train_file_path:
-        return templates.TemplateResponse(
-            "train.html",
-            {
-                "request": request,
-                "title": "Training",
-                "training_result": "Training completed, but no transformed data file found.",
-                "sample_data": "",
-            },
+    # Check if the path is valid and the file exists
+    try:
+        transformed_data = pd.read_csv(transformed_train_file_path)
+        # Convert the entire DataFrame to HTML
+        sample_data = transformed_data.to_html(
+            classes="table table-striped", index=False
         )
+        training_result = (
+            "Training completed successfully! Here is all of the transformed data:"
+        )
+    except FileNotFoundError:
+        sample_data = ""
+        training_result = "Training completed, but no transformed data file found."
+
+    # Return training completion message and sample data
+    return templates.TemplateResponse(
+        "train.html",
+        {
+            "request": request,
+            "title": "Training",
+            "training_result": training_result,
+            "sample_data": sample_data,
+        },
+    )
 
     # Load a sample of the transformed data to display
     transformed_data = pd.read_csv(transformed_train_file_path)
