@@ -9,7 +9,6 @@ This repository contains an implementation of the K-Nearest Neighbors (KNN) algo
 - [Requirements](#requirements)
 - [Usage](#usage)
 - [Results](#results)
-- [License](#license)
 - [Additional Information](#additional-information)
 
 ## Project Overview
