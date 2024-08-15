@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Brain Tumor Detection</title>
+    <link rel="stylesheet" href="./../static/styles.css">
+</head>
+<body style="background-image: url('https://w0.peakpx.com/wallpaper/934/600/HD-wallpaper-3d-human-x-ray-skeleton-neurons-brain.jpg')">
+    <div class="container">
+        <h1>Brain Tumor Detection API</h1>
+        <p>Upload an MRI image to predict</p>
+        <form id="uploadForm" action="/predict/" enctype="multipart/form-data" method="post">
+            <input type="file" name="file" accept="image/*" required>
+            <button type="submit">Upload and Predict</button>
+        </form>
+        <div id="error-message" style="color: red; margin-top: 20px;"></div>
+        {% if prediction %}
+        <div class="result">
+            <h2>Prediction Result:</h2>
+            <p>{{ prediction }}</p>
+        </div>
+        {% endif %}
+    </div>
+
+    <script>
+        document.getElementById('uploadForm').addEventListener('submit', function(event) {
+            var fileInput = document.querySelector('input[type="file"]');
+            var file = fileInput.files[0];
+            var errorMessage = document.getElementById('error-message');
+
+            if (!file.type.startsWith('image/')) {
+                event.preventDefault(); // Prevent the form from submitting
+                errorMessage.textContent = 'Invalid file type. Please upload an image file.';
+            } else {
+                errorMessage.textContent = ''; // Clear any previous error message
+            }
+        });
+    </script>
+</body>
+</html>
+
+
+
+
+
+
