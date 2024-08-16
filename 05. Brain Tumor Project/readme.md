@@ -1,13 +1,13 @@
 # Brain Tumor Detection Using Deep Learning
 
-This project involves the development of a machine learning model for the detection of brain tumors using MRI images. The project uses PyTorch for model development, including training custom and pre-trained models. A FastAPI application is also included to serve the model and provide predictions via a web interface.
+This project involves the development of a machine-learning model for the detection of brain tumours using MRI images. The project uses PyTorch for model development, including training custom and pre-trained models. A FastAPI application is also included to serve the model and provide predictions via a web interface.
 
 ## Project Structure
 
 - `brain_tumor_dataset/`: Contains the MRI images in two folders:
-  - `yes/`: Images labeled as having a tumor.
-  - `no/`: Images labeled as not having a tumor.
-- `app.py`: FastAPI application file to serve the model and predict brain tumor presence.
+  - `yes/`: Images labelled as having a tumour.
+  - `no/`: Images labelled as not having a tumour.
+- `app.py`: FastAPI application file to serve the model and predict brain tumour presence.
 - `static/`: Directory containing static files like CSS for styling the web interface.
 - `templates/`: Directory containing the HTML template for the web interface.
 - `ANN_BEST_MODEL.pth`, `VGG_BEST_MODEL.pth`, `ResNet_BEST_MODEL.pth`: Saved model files for the best performing models.
@@ -69,3 +69,19 @@ Start the FastAPI server:
 ```bash
 uvicorn app:app --reload
 ```
+## Prediction
+Upload an MRI image through the web interface, and the model will predict whether the image indicates the presence of a tumor.
+
+## Deployment
+The application can be deployed on platforms like Azure for broader access. The deployment guide is in progress.
+
+## License
+This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for details.
+
+## Acknowledgments
+- **Dataset**: MRI images used for training and testing.
+- **PyTorch**: For model development and training.
+- **FastAPI**: This is used to create the web interface for predictions.
+
+## Contact
+For any inquiries or contributions, don't hesitate to contact Anas Inam at iamanasinam@gmail.com.
