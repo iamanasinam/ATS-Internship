@@ -26,3 +26,46 @@ You can install the dependencies using `pip`:
 
 ```bash
 pip install torch torchvision pillow scikit-learn fastapi uvicorn
+```
+
+## Dataset
+The dataset is split into two classes:
+- **yes**: Images with brain tumors.
+- **no**: Images without brain tumors.
+
+Images are loaded from the respective directories and preprocessed before being fed into the models.
+
+## Models
+The following models are trained and evaluated:
+- **Custom ANN (Artificial Neural Network)**: A simple feedforward neural network.
+- **VGG-Net**: A pre-trained VGG-16 model with fine-tuning on the last layer.
+- **ResNet**: A pre-trained ResNet-50 model with fine-tuning on the last layer.
+
+The best-performing model is saved and used in the FastAPI application for predictions.
+
+## Training
+The models are trained using the following settings:
+- **Optimizer**: Adam
+- **Loss Function**: CrossEntropyLoss
+- **Epochs**: 50
+- **Batch Size**: 35
+
+The dataset is split into 80% for training and 20% for testing.
+
+## Evaluation
+The models are evaluated on the test set using the following metrics:
+- **Accuracy**
+- **Precision**
+- **Recall**
+- **Confusion Matrix**
+
+The best model is selected based on accuracy and is saved for deployment.
+
+## FastAPI Application
+The FastAPI application allows users to upload MRI images and receive a prediction on whether a tumor is present or not.
+
+### Running the Application
+Start the FastAPI server:
+```bash
+uvicorn app:app --reload
+```
